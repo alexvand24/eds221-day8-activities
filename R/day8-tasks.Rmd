@@ -1,0 +1,102 @@
+---
+title: "Data Visualization"
+author: "Alex Vand"
+date: "8/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# General use packages:
+library(tidyverse)
+library(here)
+library(janitor)
+
+# Specifically for plots:
+library(patchwork)
+library(ggrepel)
+library(gghighlight)
+library(paletteer)
+library(ggExtra)
+library(ggbeeswarm)
+```
+
+## Task 1: Do your data viz worst
+
+```{r}
+space_launches <- read_csv(here::here("data", "space_launches.csv"))
+```
+
+```{r}
+launch_plot <- ggplot(data = space_launches, aes(x = launch_year)) +
+  geom_histogram(color = "chartreuse",
+                 fill = "cyan",
+                 size = 3,
+                 linetype = "dashed",
+                 alpha = 0.5) +
+  scale_x_continuous(breaks = seq(from = 1950, to = 2040, by = 4)) +
+  scale_y_continuous(breaks = seq(from = 0, to = 400, by = 10)) +
+  theme(axis.title = element_text(angle = 76,
+                                  vjust = 4,
+                                  color = "purple",
+                                  size = 12),
+        panel.grid = element_line(color = "red")
+)
+
+launch_plot
+
+ggsave(here::here("figs", "launch_plot.jpg"), plot = launch_plot)
+```
+
+
+## Task 2: Wrangling practice with SF Greenhouse Gas data
+
+```{r}
+sf_ghg <- read_csv(here::here("data", "San_Francisco_Communitywide_Greenhouse_Gas_Inventory.csv"))
+
+sf_ghg_summary1 <- sf_ghg %>% 
+  group_by(Sector_General) %>% 
+  summarize(Emissions = sum(Emissions_mtCO2e, na.rm = TRUE))
+
+sf_ghg_summary2 <- sf_ghg %>% 
+  group_by(Calendar_Year, Commodity_Type) %>% 
+  summarize(Emissions = sum(Emissions_mtCO2e))
+
+sf_ghg_summary3 <- sf_ghg %>% 
+  filter(Calendar_Year >= 2005,
+         str_detect(Sector_Detail2, pattern = "PG&E")) %>% 
+  select(Calendar_Year, Sector_Detail2, Emissions_mtCO2e)
+```
+
+
+
+## Task 3: Do your data viz best
+
+```{r}
+sf_ghg_waste <- sf_ghg %>% 
+  filter(Commodity_Type == "Solid Waste")
+
+solid_waste_plot <- ggplot(data = sf_ghg_waste, aes(x = Calendar_Year,
+                                y = Emissions_mtCO2e)) +
+  geom_line(color = "red",
+            size = 1.5) +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(),
+        axis.title.y = element_text(angle = 0, vjust = 0.5, size = 7)) +
+  labs(title = "Solid Waste CO2 Emissions",
+       subtitle = "San Francisco greenhouse gas emissions due to solid waste",
+       x = "Year",
+       y = "CO2 emissions (metric tons)") +
+  geom_point()
+
+ggsave(here::here("figs", "solid_waste_plot.png"), plot = solid_waste_plot, height= 5)
+```
+
+
+
+
+
+
+
+
+
